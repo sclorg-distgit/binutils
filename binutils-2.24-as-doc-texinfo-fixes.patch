@@ -1,0 +1,51 @@
+diff -Nrup a/gas/doc/c-arc.texi b/gas/doc/c-arc.texi
+--- a/gas/doc/c-arc.texi	2014-05-16 03:17:23.291594885 -0400
++++ b/gas/doc/c-arc.texi	2014-05-16 03:19:40.307589445 -0400
+@@ -220,7 +220,7 @@ The extension instructions are not macro
+ encodings for use of these instructions according to the specification
+ by the user.  The parameters are:
+ 
+-@itemize @bullet
++@itemize @code
+ @item @var{name}
+ Name of the extension instruction
+ 
+diff -Nrup a/gas/doc/c-arm.texi b/gas/doc/c-arm.texi
+--- a/gas/doc/c-arm.texi	2014-05-16 03:20:22.040666885 -0400
++++ b/gas/doc/c-arm.texi	2014-05-16 03:31:01.229716427 -0400
+@@ -390,29 +390,29 @@ ARM and THUMB instructions had their own
+ @code{unified} syntax, which can be selected via the @code{.syntax}
+ directive, and has the following main features:
+ 
+-@itemize @bullet
++@itemize @code
+ @item
+ Immediate operands do not require a @code{#} prefix.
+ 
+-@item
++@item 2
+ The @code{IT} instruction may appear, and if it does it is validated
+ against subsequent conditional affixes.  In ARM mode it does not
+ generate machine code, in THUMB mode it does.
+ 
+-@item
++@item 3
+ For ARM instructions the conditional affixes always appear at the end
+ of the instruction.  For THUMB instructions conditional affixes can be
+ used, but only inside the scope of an @code{IT} instruction.
+ 
+-@item
++@item 4
+ All of the instructions new to the V6T2 architecture (and later) are
+ available.  (Only a few such instructions can be written in the
+ @code{divided} syntax).
+ 
+-@item
++@item 5
+ The @code{.N} and @code{.W} suffixes are recognized and honored.
+ 
+-@item
++@item 6
+ All instructions set the flags if and only if they have an @code{s}
+ affix.
+ @end itemize

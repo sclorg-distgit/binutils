@@ -1,0 +1,72 @@
+#commit 1d946cb356d22867128b40b9560857f930b2b0b0
+#Author: Cary Coutant <ccoutant@google.com>
+#Date:   Wed Nov 6 10:34:26 2013 -0800
+#
+#   Fix assert failure with --emit-relocs and .eh_frame sections.
+#   
+#   gold/
+#   	PR gold/15758
+#   	* object.cc (Sized_relobj_file::do_layout): Handle .eh_frame sections
+#   	before reloc sections.
+#
+diff -Nrup a/gold/object.cc b/gold/object.cc
+--- a/gold/object.cc	2013-02-27 13:28:03.000000000 -0700
++++ b/gold/object.cc	2013-11-07 09:37:25.263426357 -0700
+@@ -1685,6 +1685,28 @@ Sized_relobj_file<size, big_endian>::do_
+   if (!is_pass_two)
+     layout->layout_gnu_stack(seen_gnu_stack, gnu_stack_flags, this);
+ 
++  // Handle the .eh_frame sections after the other sections.
++  gold_assert(!is_pass_one || eh_frame_sections.empty());
++  for (std::vector<unsigned int>::const_iterator p = eh_frame_sections.begin();
++       p != eh_frame_sections.end();
++       ++p)
++    {
++      unsigned int i = *p;
++      const unsigned char* pshdr;
++      pshdr = section_headers_data + i * This::shdr_size;
++      typename This::Shdr shdr(pshdr);
++
++      this->layout_eh_frame_section(layout,
++				    symbols_data,
++				    symbols_size,
++				    symbol_names_data,
++				    symbol_names_size,
++				    i,
++				    shdr,
++				    reloc_shndx[i],
++				    reloc_type[i]);
++    }
++
+   // When doing a relocatable link handle the reloc sections at the
+   // end.  Garbage collection  and Identical Code Folding is not
+   // turned on for relocatable code.
+@@ -1737,28 +1759,6 @@ Sized_relobj_file<size, big_endian>::do_
+       out_section_offsets[i] = invalid_address;
+     }
+ 
+-  // Handle the .eh_frame sections at the end.
+-  gold_assert(!is_pass_one || eh_frame_sections.empty());
+-  for (std::vector<unsigned int>::const_iterator p = eh_frame_sections.begin();
+-       p != eh_frame_sections.end();
+-       ++p)
+-    {
+-      unsigned int i = *p;
+-      const unsigned char* pshdr;
+-      pshdr = section_headers_data + i * This::shdr_size;
+-      typename This::Shdr shdr(pshdr);
+-
+-      this->layout_eh_frame_section(layout,
+-				    symbols_data,
+-				    symbols_size,
+-				    symbol_names_data,
+-				    symbol_names_size,
+-				    i,
+-				    shdr,
+-				    reloc_shndx[i],
+-				    reloc_type[i]);
+-    }
+-
+   // When building a .gdb_index section, scan the .debug_info and
+   // .debug_types sections.
+   gold_assert(!is_pass_one
