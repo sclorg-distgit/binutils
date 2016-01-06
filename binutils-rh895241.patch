@@ -1,0 +1,116 @@
+diff -Nrup a/gold/resolve.cc b/gold/resolve.cc
+--- a/gold/resolve.cc	2014-10-14 01:32:04.000000000 -0600
++++ b/gold/resolve.cc	2015-08-04 09:49:18.161511562 -0600
+@@ -279,15 +279,10 @@ Symbol_table::resolve(Sized_symbol<size>
+            && (to->visibility() == elfcpp::STV_HIDDEN
+                || to->visibility() == elfcpp::STV_INTERNAL))
+     {
+-      // A dynamic object cannot reference a hidden or internal symbol
+-      // defined in another object.
+-      gold_warning(_("%s symbol '%s' in %s is referenced by DSO %s"),
+-                   (to->visibility() == elfcpp::STV_HIDDEN
+-                    ? "hidden"
+-                    : "internal"),
+-                   to->demangled_name().c_str(),
+-                   to->object()->name().c_str(),
+-                   object->name().c_str());
++      // The symbol is hidden, so a reference from a shared object
++      // cannot bind to it.  We tried issuing a warning in this case,
++      // but that produces false positives when the symbol is
++      // actually resolved in a different shared object (PR 15574).
+       return;
+     }
+   else
+diff -Nrup a/gold/testsuite/hidden_test.sh b/gold/testsuite/hidden_test.sh
+--- a/gold/testsuite/hidden_test.sh	2014-10-14 01:32:04.000000000 -0600
++++ b/gold/testsuite/hidden_test.sh	2015-08-04 09:49:18.162511540 -0600
+@@ -29,11 +29,11 @@
+ # error messages are issued for the references to internal and
+ # hidden symbols.  The errors will be found in hidden_test.err.
+ 
+-check()
++check_missing()
+ {
+-    if ! grep -q "$2" "$1"
++    if grep -q "$2" "$1"
+     then
+-	echo "Did not find expected error in $1:"
++	echo "Found unexpected error in $1:"
+ 	echo "   $2"
+ 	echo ""
+ 	echo "Actual error output below:"
+@@ -42,25 +42,29 @@ check()
+     fi
+ }
+ 
+-check_missing()
++check_missing_sym()
+ {
+     if grep -q "$2" "$1"
+     then
+-	echo "Found unexpected error in $1:"
++	echo "Found unexpected symbol in $1:"
+ 	echo "   $2"
+ 	echo ""
+-	echo "Actual error output below:"
++	echo "Actual nm output below:"
+ 	cat "$1"
+ 	exit 1
+     fi
+ }
+ 
+-# We should see errors for hidden and internal symbols.
+-check hidden_test.err "hidden symbol 'main_hidden' in hidden_test_main.o is referenced by DSO libhidden.so"
+-check hidden_test.err "internal symbol 'main_internal' in hidden_test_main.o is referenced by DSO libhidden.so"
+-
+ # We shouldn't see errors for the default and protected symbols.
+ check_missing hidden_test.err "main_default"
+ check_missing hidden_test.err "main_protected"
+ 
++# We shouldn't see errors for the hidden and internal symbols either (PR 15574).
++check_missing hidden_test.err "main_hidden"
++check_missing hidden_test.err "main_internal"
++
++# We shouldn't see the hidden or internal symbols in the dynamic symbol table.
++check_missing_sym hidden_test.syms "main_hidden"
++check_missing_sym hidden_test.syms "main_internal"
++
+ exit 0
+diff -Nrup a/gold/testsuite/Makefile.am b/gold/testsuite/Makefile.am
+--- a/gold/testsuite/Makefile.am	2015-08-04 09:48:59.907909728 -0600
++++ b/gold/testsuite/Makefile.am	2015-08-04 09:49:18.162511540 -0600
+@@ -1807,11 +1807,13 @@ endif MCMODEL_MEDIUM
+ # referenced by a shared library.
+ check_SCRIPTS += hidden_test.sh
+ check_DATA += hidden_test.err
+-MOSTLYCLEANFILES += hidden_test hidden_test.err
++MOSTLYCLEANFILES += hidden_test hidden_test.err hidden_test.syms
+ libhidden.so: hidden_test_1.c gcctestdir/ld
+ 	$(COMPILE) -Bgcctestdir/ -g -shared -fPIC -w -o $@ $(srcdir)/hidden_test_1.c
+ hidden_test: hidden_test_main.o libhidden.so gcctestdir/ld
+ 	$(LINK) -Bgcctestdir/ -Wl,-R,. hidden_test_main.o libhidden.so 2>hidden_test.err
++hidden_test.syms: hidden_test
++	$(TEST_NM) -D hidden_test > $@
+ hidden_test.err: hidden_test
+ 	@touch hidden_test.err
+ 
+diff -Nrup a/gold/testsuite/Makefile.in b/gold/testsuite/Makefile.in
+--- a/gold/testsuite/Makefile.in	2015-08-04 09:48:59.908909706 -0600
++++ b/gold/testsuite/Makefile.in	2015-08-04 09:49:18.162511540 -0600
+@@ -438,6 +438,7 @@ check_PROGRAMS = $(am__EXEEXT_1) $(am__E
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	discard_locals_relocatable_test1.out \
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	discard_locals_relocatable_test2.out \
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	hidden_test hidden_test.err \
++@GCC_TRUE@@NATIVE_LINKER_TRUE@	hidden_test.syms \
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	retain_symbols_file_test \
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	retain_symbols_file_test.in \
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	retain_symbols_file_test.stdout \
+@@ -5448,6 +5449,8 @@ uninstall-am:
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	$(COMPILE) -Bgcctestdir/ -g -shared -fPIC -w -o $@ $(srcdir)/hidden_test_1.c
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@hidden_test: hidden_test_main.o libhidden.so gcctestdir/ld
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	$(LINK) -Bgcctestdir/ -Wl,-R,. hidden_test_main.o libhidden.so 2>hidden_test.err
++@GCC_TRUE@@NATIVE_LINKER_TRUE@hidden_test.syms: hidden_test
++@GCC_TRUE@@NATIVE_LINKER_TRUE@	$(TEST_NM) -D hidden_test > $@
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@hidden_test.err: hidden_test
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@	@touch hidden_test.err
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@retain_symbols_file_test.so: basic_pic_test.o gcctestdir/ld
