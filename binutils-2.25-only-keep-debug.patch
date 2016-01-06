@@ -1,0 +1,109 @@
+diff -rup binutils-2.25.orig/bfd/elf.c binutils-2.25/bfd/elf.c
+--- binutils-2.25/bfd/elf.c	2015-09-22 15:09:25.584049103 +0100
++++ binutils-2.25.orig/bfd/elf.c	2015-09-22 15:08:33.840771978 +0100
+@@ -1165,6 +1165,69 @@ _bfd_elf_copy_private_bfd_data (bfd *ibf
+     elf_elfheader (obfd)->e_ident [EI_OSABI] =
+       elf_elfheader (ibfd)->e_ident [EI_OSABI];
+ 
++  /* This is an feature for objcopy --only-keep-debug:  When a section's type
++     is changed to NOBITS, we preserve the sh_link and sh_info fields so that
++     they can be matched up with the original.  */
++  Elf_Internal_Shdr ** iheaders = elf_elfsections (ibfd);
++  Elf_Internal_Shdr ** oheaders = elf_elfsections (obfd);
++
++  if (iheaders != NULL && oheaders != NULL)
++    {
++      unsigned int i;
++
++      for (i = 0; i < elf_numsections (obfd); i++)
++	{
++	  unsigned int j;
++	  Elf_Internal_Shdr * oheader = oheaders[i];
++
++	  if (oheader == NULL
++	      || oheader->sh_type != SHT_NOBITS
++	      || oheader->sh_size == 0
++	      || (oheader->sh_info != 0 && oheader->sh_link != 0))
++	    continue;
++
++	  /* Scan for the matching section in the input bfd.
++	     FIXME: We could use something better than a linear scan here.
++	     Unfortunately we cannot compare names as the output string table
++	     is empty, so instead we check size, address and type.  */
++	  for (j = 0; j < elf_numsections (ibfd); j++)
++	    {
++	      Elf_Internal_Shdr * iheader = iheaders[j];
++	      
++	      /* Since --only-keep-debug turns all non-debug sections
++		 into SHT_NOBITS sections with no info or link fields
++		 the SHF_INFO_LINK flag can be lost as well.  */
++	      if (  (iheader->sh_flags & ~ SHF_INFO_LINK) == (oheader->sh_flags & ~ SHF_INFO_LINK)
++		  && iheader->sh_addralign == oheader->sh_addralign
++		  && iheader->sh_entsize == oheader->sh_entsize
++		  && iheader->sh_size == oheader->sh_size
++		  && iheader->sh_addr == oheader->sh_addr
++		  && (iheader->sh_info != oheader->sh_info
++		      || iheader->sh_link != oheader->sh_link))
++		{
++		  /* Note: Strictly speaking these assignments are wrong.
++		     The sh_link and sh_info fields should point to the
++		     relevent sections in the output BFD, which may not be in
++		     the same location as they were in the input BFD.  But the
++		     whole point of this action is to preserve the original
++		     values of the sh_link and sh_info fields, so that they
++		     can be matched up with the section headers in the
++		     original file.  So strictly speaking we may be creating
++		     an invalid ELF file, but it is only for a file that just
++		     contains debug info and only for sections without any
++		     contents.  */
++		  if (oheader->sh_link == 0)
++		    oheader->sh_link = iheader->sh_link;
++		  if (oheader->sh_info == 0)
++		    oheader->sh_info = iheader->sh_info;
++		  if (iheader->sh_flags & SHF_INFO_LINK)
++		    oheader->sh_flags |= SHF_INFO_LINK;
++		  break;
++		}
++	    }
++	}
++    }
++
+   return TRUE;
+ }
+ 
+diff -rup binutils-2.25.orig/binutils/doc/binutils.texi binutils-2.25/binutils/doc/binutils.texi
+--- binutils-2.25.orig/binutils/doc/binutils.texi	2015-08-05 16:21:58.215001408 +0100
++++ binutils-2.25/binutils/doc/binutils.texi	2015-08-05 16:22:23.286146671 +0100
+@@ -1681,6 +1681,12 @@ Strip a file, removing contents of any s
+ stripped by @option{--strip-debug} and leaving the debugging sections
+ intact.  In ELF files, this preserves all note sections in the output.
+ 
++Note - the section headers of the stripped sections are preserved,
++including their sizes, but the contents of the section are discarded.
++The section headers are preserved so that other tools can match up the
++debuginfo file with the real executable, even if that executable has
++been relocated to a different address space.
++
+ The intention is that this option will be used in conjunction with
+ @option{--add-gnu-debuglink} to create a two part executable.  One a
+ stripped binary which will occupy less space in RAM and in a
+@@ -2955,9 +2961,16 @@ When stripping a file, perhaps with @opt
+ which would otherwise get stripped.
+ 
+ @item --only-keep-debug
+-Strip a file, removing contents of any sections that would not be
++Strip a file, emptying the contents of any sections that would not be
+ stripped by @option{--strip-debug} and leaving the debugging sections
+-intact.  In ELF files, this preserves all note sections in the output.
++intact.  In ELF files, this preserves all the note sections in the
++output as well.
++
++Note - the section headers of the stripped sections are preserved,
++including their sizes, but the contents of the section are discarded.
++The section headers are preserved so that other tools can match up the
++debuginfo file with the real executable, even if that executable has
++been relocated to a different address space.
+ 
+ The intention is that this option will be used in conjunction with
+ @option{--add-gnu-debuglink} to create a two part executable.  One a
+
