@@ -1,0 +1,36 @@
+--- binutils-2.25.1.orig/ld/ldlang.c	2016-04-04 14:09:40.177436868 +0100
++++ binutils-2.25.1/ld/ldlang.c	2016-04-04 15:51:39.172527360 +0100
+@@ -8687,7 +8687,7 @@ cmdline_add_object_only_section (bfd_byt
+       err = bfd_errmsg (bfd_get_error ());
+       goto loser;
+     }
+-  ofilename = bfd_get_filename (obfd);
++  ofilename = xstrdup (bfd_get_filename (obfd));
+ 
+   if (!bfd_set_format (obfd, bfd_object))
+     {
+@@ -8827,9 +8827,10 @@ cmdline_add_object_only_section (bfd_byt
+   if (rename (ofilename, output_filename))
+     {
+       unlink (ofilename);
+-      einfo (_("%P%F: failed to rename output with object-only section\n"));
++      einfo (_("%P%F: failed to rename %s to output %s with object-only section\n"),
++	     ofilename, output_filename);
+     }
+-
++  free (ofilename);
+   return;
+ 
+ loser:
+@@ -8840,7 +8841,10 @@ loser:
+   if (obfd)
+     bfd_close (obfd);
+   if (ofilename)
+-    unlink (ofilename);
++    {
++      unlink (ofilename);
++      free (ofilename);
++    }
+   einfo (_("%P%F: failed to add object-only section: %s\n"), err);
+ }
+ 

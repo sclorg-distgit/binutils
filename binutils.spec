@@ -15,12 +15,14 @@
 %define isnative 0
 %define enable_shared 0
 %endif
-# BZ 1124342: Enable deterministic archives by default.
-%define enable_deterministic_archives 1
+# Disable deterministic archives by default.
+# This is for package builders who do not want to have to change
+# their build scripts to work with deterministic archives.
+%define enable_deterministic_archives 0
 
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
-Version: 2.25
+Version: 2.25.1
 Release: 10%{?dist}
 License: GPLv3+
 Group: Development/Tools
@@ -54,8 +56,6 @@ Patch12: binutils-2.25-kernel-ld-r.patch
 Patch13: binutils-2.23.2-aarch64-em.patch
 # Fix detections little endian PPC shared libraries
 Patch14: binutils-2.24-ldforcele.patch
-# Fix allocation of space for x86_64 PIE relocs.
-Patch15: binutils-2.25-x86_64-pie-relocs.patch
 
 Patch1010: binutils-2.23.51.0.3-Provide-std-tr1-hash.patch
 Patch1011: binutils-rh1038339.patch
@@ -65,6 +65,14 @@ Patch1014: binutils-rh895241.patch
 
 # Fix preservation of section headers whilst stripping out non-debug information.
 Patch1015: binutils-2.25-only-keep-debug.patch
+# Fix seg-fault in readelf reading a corrupt binary.
+Patch1016: binutils-pr18879.patch
+# Fix failures in GOLD testsuite.
+Patch1017: binutils-2.25.1-gold-testsuite-fixes.patch
+# Add support for Intel Memory Protection Key instructions.
+Patch1018: binutils-rh1309347.patch
+Patch1019: binutils-2.25-kernel-ld-r.bugfix.patch
+
 
 Provides: bundled(libiberty)
 
@@ -192,7 +200,6 @@ using libelf instead of BFD.
 %ifarch ppc64le
 %patch14 -p1 -b .ldforcele~
 %endif
-%patch15 -p1 -b .x86_64-pie~
 
 %patch1010 -p1 -b .provide-hash~
 %patch1011 -p1 -b .manpage~
@@ -200,6 +207,10 @@ using libelf instead of BFD.
 %patch1013 -p1 
 %patch1014 -p1
 %patch1015 -p1
+%patch1016 -p1
+%patch1017 -p0
+%patch1018 -p1
+%patch1019 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -500,6 +511,32 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Mon Apr 04 2016 Patsy Franklin <pfrankli@redhat.com> 2.25.1-10
+- Fix a case where the string was being used after the memory
+  containing the string had been freed.
+
+* Wed Mar 02 2016 Nick Clifton <nickc@redhat.com> 2.25.1-9
+- Bump release number by 2 in order to enable build.
+
+* Wed Mar 02 2016 Nick Clifton <nickc@redhat.com> 2.25.1-7
+- Fix GOLD testsuite failures.
+  (#1312376)
+
+* Thu Feb 25 2016 Nick Clifton <nickc@redhat.com> 2.25.1-6
+- Change ar's default to be the creation of non-deterministic archives.
+
+* Thu Feb 18 2016 Nick Clifton <nickc@redhat.com> 2.25.1-4
+- Add support for Intel Memory Protection Key instructions.
+  (#1309347)
+
+* Thu Feb 04 2016 Nick Clifton <nickc@redhat.com> 2.25.1-2
+- Import patch for FSF PR 18879
+  (#1260034)
+
+* Thu Jan 14 2016 Nick Clifton <nickc@redhat.com> 2.25.1-1
+- Rebase on FSF binutils 2.25.1 release.
+- Retire patch binutils-2.25-x86_64-pie-relocs.patch
+
 * Tue Sep 22 2015 Nick Clifton <nickc@redhat.com> 2.25-10
 - Improved patch to preserve the sh_link and sh_info fields in stripped ELF sections.
   (#1246390)
