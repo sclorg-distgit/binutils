@@ -1,0 +1,50 @@
+diff -Nrup a/gas/doc/as.texinfo b/gas/doc/as.texinfo
+--- a/gas/doc/as.texinfo	2013-02-27 15:28:03.000000000 -0500
++++ b/gas/doc/as.texinfo	2013-12-11 13:18:39.401021599 -0500
+@@ -723,10 +723,12 @@ assembly.
+ Remove local absolute symbols from the outgoing symbol table.
+ 
+ @item -v
+-@itemx -version
+-Print the @command{as} version.
++@itemx -verbose
++@itemx --verbose
++Print the @command{as} version and continue.
+ 
+-@item --version
++@item -version
++@itemx --version
+ Print the @command{as} version and exit.
+ 
+ @item -W
+@@ -2361,12 +2363,16 @@ For example, it disables the exception f
+ @section Announce Version: @option{-v}
+ 
+ @kindex -v
+-@kindex -version
+ @cindex assembler version
+ @cindex version of assembler
+ You can find out what version of as is running by including the
+-option @samp{-v} (which you can also spell as @samp{-version}) on the
+-command line.
++option @samp{-v} (which you can also spell as @samp{-verbose} or 
++@samp{--verbose}) on the command line.
++
++@section Announce Version and Exit: @option{-version}
++@kindex -version
++The @samp{-version} option (which you can also spell as @samp{--version})
++prints the version of as and exits. 
+ 
+ @node W
+ @section Control Warnings: @option{-W}, @option{--warn}, @option{--no-warn}, @option{--fatal-warnings}
+--- binutils-2.27.orig/gas/doc/as.texinfo	2016-07-18 09:12:45.299152360 +0100
++++ binutils-2.27/gas/doc/as.texinfo	2016-07-18 09:13:08.637310883 +0100
+@@ -239,7 +239,7 @@ gcc(1), ld(1), and the Info entries for
+  [@b{-o} @var{objfile}] [@b{-R}]
+  [@b{--hash-size}=@var{NUM}] [@b{--reduce-memory-overheads}]
+  [@b{--statistics}]
+- [@b{-v}] [@b{-version}] [@b{--version}]
++ [@b{-v}] [@b{-verbose}] [@b{--verbose}] [@b{-version}] [@b{--version}]
+  [@b{-W}] [@b{--warn}] [@b{--fatal-warnings}] [@b{-w}] [@b{-x}]
+  [@b{-Z}] [@b{@@@var{FILE}}]
+  [@b{--sectname-subst}] [@b{--size-check=[error|warning]}]
