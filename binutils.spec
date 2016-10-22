@@ -27,7 +27,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -36,7 +36,7 @@ URL: http://sources.redhat.com/binutils
 # many controversial patches so we stick with the official FSF version
 # instead.
 
-Source: http://ftp.gnu.org/gnu/binutils/binutils-%{version}-beta.tar.bz2
+Source: http://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.bz2
 
 Source2: binutils-2.19.50.0.1-output-format.sed
 
@@ -521,6 +521,10 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Thu Aug 04 2016 Nick Clifton  <nickc@redhat.com> 2.27-4
+- Rebase on official FSF binutils 2.27 release.
+  (#1358353)
+
 * Thu Jul 21 2016 Nick Clifton  <nickc@redhat.com> 2.27-3
 - Version bump so that the Brew build can be rerun, this time including ppc64 (big-endian)
   (#1358353)
