@@ -1,0 +1,57 @@
+From b9fe56f2e08939e68cabda378c7e5c4775ed381e Mon Sep 17 00:00:00 2001
+From: root <root@auto-i386-001.ss.eng.bos.redhat.com>
+Date: Tue, 16 Oct 2012 04:27:15 -0400
+Subject: [PATCH] Provide std::tr1::hash{<unsigned long long>, <long long>}
+
+When compiling powerpc.cc on gcc 4.1 i386, we fail on line 68
+because we try to instantiate unordered_map with a key that is
+elfcpp::Elf_types<size>::Elf_Addr where size seems to be uint64_t.
+
+That amounts to trying to use an std::tr1::hash<unsigned long long>
+but then system.h only defines an std::tr1::hash<off_t> with off_t
+defined to long long.
+
+This patch defines a specialization for std::tr1::hash<unsigned long long>
+and std::tr1::hash<long long>, similarly to what is done by recent libstdc++
+in the file functional_hash.h.
+
+gold/
+
+	* system.h (tr1_hashtable_define_trivial_hash): Define new macro.
+	  Use it to define specializations std::tr1::hash<long long>
+	  and std::tr1::hash<unsiged long long>.
+---
+ gold/gold.h |   21 ++++++++++++++-------
+ 1 files changed, 14 insertions(+), 7 deletions(-)
+
+diff -Nrup a/gold/system.h b/gold/system.h
+--- a/gold/system.h     2012-12-21 14:40:41.000000000 -0500
++++ b/gold/system.h     2013-01-08 13:29:21.872781906 -0500
+@@ -77,13 +77,20 @@
+ // arises with GCC 4.1.x when compiling in 32-bit mode with a 64-bit
+ // off_t type.
+ namespace std { namespace tr1 {
+-template<>
+-struct hash<off_t> : public std::unary_function<off_t, std::size_t>
+-{
+-  std::size_t
+-  operator()(off_t val) const
+-  { return static_cast<std::size_t>(val); }
+-};
++#define tr1_hashtable_define_trivial_hash(T)            \
++  template<>                                           \
++  struct hash<T>                                       \
++    : public std::unary_function<T, std::size_t>       \
++  {                                                    \
++    std::size_t                                                \
++      operator()(T val) const                          \
++    { return static_cast<std::size_t>(val); }          \
++  }
++  template<typename T> struct hash;
++
++  tr1_hashtable_define_trivial_hash(long long);
++  tr1_hashtable_define_trivial_hash(unsigned long long);
++#undef tr1_hashtable_define_trivial_hash
+ } } // Close namespaces.
+ #endif // !defined(HAVE_TR1_HASH_OFF_T)
+
