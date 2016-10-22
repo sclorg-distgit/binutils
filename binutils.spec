@@ -27,7 +27,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -521,8 +521,13 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Thu Jul 21 2016 Nick Clifton  <nickc@redhat.com> 2.27-3
+- Version bump so that the Brew build can be rerun, this time including ppc64 (big-endian)
+  (#1358353)
+
 * Wed Jul 20 2016 Nick Clifton  <nickc@redhat.com> 2.27-2
-- Remove sim sources from tarball. (#1358353)
+- Remove sim sources from tarball.
+  (#1358353)
 
 * Mon Jul 18 2016 Nick Clifton  <nickc@redhat.com> 2.27-1
 - Rebase on FSF binutils 2.27 release. (#1356661)
@@ -541,7 +546,7 @@ exit 0
 - Retire: binutils-rh895241.patch
 
 * Mon Apr 04 2016 Patsy Franklin <pfrankli@redhat.com> 2.25.1-10
-- Fix a case where the string was being used after the memory
+- Fix a case where a string was being used after the memory
   containing the string had been freed.
 
 * Wed Mar 02 2016 Nick Clifton <nickc@redhat.com> 2.25.1-9
