@@ -27,7 +27,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 4%{?dist}
+Release: 5%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -61,6 +61,8 @@ Patch12: binutils-2.26-lto.patch
 Patch13: binutils-2.23.51.0.3-Provide-std-tr1-hash.patch
 Patch14: binutils-rh1038339.patch
 Patch15: binutils-2.24-rh919508.patch
+# Fix the computation of the value for the sh_info field of the .dynsym section.
+Patch16: binutils-2.27-local-dynsym-count.patch
 
 Provides: bundled(libiberty)
 
@@ -188,6 +190,7 @@ using libelf instead of BFD.
 %patch13 -p1 -b .provide-hash~
 %patch14 -p1 -b .manpage~
 %patch15 -p1 
+%patch16 -p1 
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -521,6 +524,10 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Fri Aug 12 2016 Nick Clifton  <nickc@redhat.com> 2.27-5
+- Fix the computation of the sh_info field in the header of the .dynsym section.
+  (#1366185)
+
 * Thu Aug 04 2016 Nick Clifton  <nickc@redhat.com> 2.27-4
 - Rebase on official FSF binutils 2.27 release.
   (#1358353)
