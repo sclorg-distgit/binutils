@@ -27,7 +27,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 6%{?dist}
+Release: 7%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -65,6 +65,8 @@ Patch15: binutils-2.24-rh919508.patch
 Patch16: binutils-2.27-local-dynsym-count.patch
 # Sort section headers according to increasing section offset.
 Patch17: binutils-2.27-monotonic-section-offsets.patch
+# Really enable -z relro by default for aarch64
+Patch18: binutils-2.27-aarch64-relro-default.patch
 
 Provides: bundled(libiberty)
 
@@ -194,6 +196,7 @@ using libelf instead of BFD.
 %patch15 -p1 
 %patch16 -p1 
 %patch17 -p1 
+%patch18 -p1 
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -527,6 +530,10 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Thu Aug 18 2016 Nick Clifton  <nickc@redhat.com> 2.27-7
+- Allow -z relro to be enabled by default for the AArch64 target.
+  (#1367862)
+
 * Wed Aug 17 2016 Nick Clifton  <nickc@redhat.com> 2.27-6
 - Move .shstrtab section to end of section list so that the monotonic ordering of section offsets is restored.
   (#1366145)
