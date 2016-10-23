@@ -27,7 +27,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 5%{?dist}
+Release: 6%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -63,6 +63,8 @@ Patch14: binutils-rh1038339.patch
 Patch15: binutils-2.24-rh919508.patch
 # Fix the computation of the value for the sh_info field of the .dynsym section.
 Patch16: binutils-2.27-local-dynsym-count.patch
+# Sort section headers according to increasing section offset.
+Patch17: binutils-2.27-monotonic-section-offsets.patch
 
 Provides: bundled(libiberty)
 
@@ -191,6 +193,7 @@ using libelf instead of BFD.
 %patch14 -p1 -b .manpage~
 %patch15 -p1 
 %patch16 -p1 
+%patch17 -p1 
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -524,6 +527,10 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Wed Aug 17 2016 Nick Clifton  <nickc@redhat.com> 2.27-6
+- Move .shstrtab section to end of section list so that the monotonic ordering of section offsets is restored.
+  (#1366145)
+
 * Fri Aug 12 2016 Nick Clifton  <nickc@redhat.com> 2.27-5
 - Fix the computation of the sh_info field in the header of the .dynsym section.
   (#1366185)
