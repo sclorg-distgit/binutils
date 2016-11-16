@@ -4,6 +4,9 @@
 # --without testsuite: Do not run the testsuite.  Default is to run it.
 # --with testsuite: Run the testsuite.  Default --with debug is not to run it.
 
+# For DTS-6 on RHEL-6 we only support x86 and x86_64.
+# For DTS-6 on RHEL-7 we also support ppc64, ppc64le, s390x and aarch64
+
 %{?scl:%{?scl_package:%scl_package binutils}}
 
 %if 0%{!?binutils_target:1}
@@ -27,7 +30,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 8%{?dist}
+Release: 10%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -67,6 +70,8 @@ Patch16: binutils-2.27-local-dynsym-count.patch
 Patch17: binutils-2.27-monotonic-section-offsets.patch
 # Really enable -z relro by default for aarch64
 Patch18: binutils-2.27-aarch64-relro-default.patch
+# Add support for the Power9 architecture
+Patch19: binutils-2.27-power9.patch
 
 Provides: bundled(libiberty)
 
@@ -197,6 +202,7 @@ using libelf instead of BFD.
 %patch16 -p1 
 %patch17 -p1 
 %patch18 -p1 
+%patch19 -p1 
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -286,7 +292,9 @@ CFLAGS="$CFLAGS -O0 -ggdb2 -Wno-error -D_FORTIFY_SOURCE=0"
   --enable-gold \
 %endif
 %endif
-%if !%{isnative}
+%if %{isnative}
+  --with-sysroot=/ \
+%else
   --enable-targets=%{_host} \
   --with-sysroot=%{_prefix}/%{binutils_target}/sys-root \
   --program-prefix=%{cross} \
@@ -530,6 +538,13 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Wed Sep 28 2016 Nick Clifton  <nickc@redhat.com> 2.27-10
+- Use correct default sysroot for native targets.
+- Add Power9 ISA 3.0 support.
+
+* Mon Sep 05 2016 Carlos O'Donell <carlos@redhat.com>  2.27-9
+- Enable '--sysroot' option support for all configurations.
+
 * Thu Sep 01 2016 Nick Clifton  <nickc@redhat.com> 2.27-8
 - Properly disable the default generation of compressed debug sections.
   (#1366182)
