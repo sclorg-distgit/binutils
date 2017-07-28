@@ -1,0 +1,32 @@
+--- binutils.orig/ld/testsuite/ld-elf/elf.exp	2017-05-23 11:03:36.552764573 +0100
++++ binutils-2.28/ld/testsuite/ld-elf/elf.exp	2017-05-23 11:13:48.419611868 +0100
+@@ -142,6 +142,10 @@ if { [check_shared_lib_support] } then {
+ 	    {pr20995b.s} {} "pr20995.so"}
+     }
+     setup_xfail "tic6x-*-*"
++    # xfail on arm*-*-eabi*.  The list can be enlarged to those targets that
++    # don't support GNU_RELRO.  For more details, please see discussions at:
++    #   https://sourceware.org/ml/binutils/2017-01/msg00441.html
++    setup_xfail "arm*-*-eabi*" "hppa*64*-*-hpux*"
+     run_ld_link_tests {
+ 	{"Build pr20995-2.so"
+ 	    "-shared -z relro" "" ""
+@@ -149,12 +153,17 @@ if { [check_shared_lib_support] } then {
+     }
+     # These targets don't copy dynamic variables into .bss.
+     setup_xfail "alpha-*-*" "bfin-*-*" "ia64-*-*" "xtensa-*-*"
++    # or don't have .data.rel.ro
++    setup_xfail "hppa*64*-*-hpux*"
+     run_ld_link_tests [list \
+ 	[list \
+ 	    "pr20995" \
+ 	    "" "tmpdir/pr20995.so" "$AFLAGS_NONPIC" \
+ 	    {pr20995a.s} {{readelf {-S --wide} pr20995.r}} "pr20995"]]
+-    setup_xfail "alpha-*-*" "bfin-*-*" "ia64-*-*" "xtensa-*-*"
++    # xfail on arm*-*-eabi* is particularly because of no support of GNU_RELRO.
++    # Please see the link above for details.
++    setup_xfail "alpha-*-*" "bfin-*-*" "ia64-*-*" "xtensa-*-*" "arm*-*-eabi*"
++    setup_xfail "hppa*64*-*-hpux*"
+     run_ld_link_tests [list \
+ 	[list \
+ 	    "pr20995-2" \

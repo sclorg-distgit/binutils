@@ -1,0 +1,12 @@
+diff -Nrup a/gold/Makefile.in b/gold/Makefile.in
+--- a/gold/Makefile.in	2014-05-16 02:47:18.061653023 -0400
++++ b/gold/Makefile.in	2014-05-16 02:51:39.680778689 -0400
+@@ -120,7 +120,7 @@ am__objects_3 = yyscript.$(OBJEXT)
+ am_libgold_a_OBJECTS = $(am__objects_1) $(am__objects_2) \
+ 	$(am__objects_3) $(am__objects_2)
+ libgold_a_OBJECTS = $(am_libgold_a_OBJECTS)
+-am__installdirs = "$(DESTDIR)$(bindir)"
++am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@@THREADS_TRUE@am__EXEEXT_1 =  \
+ @GCC_TRUE@@NATIVE_LINKER_TRUE@@THREADS_TRUE@	ld3$(EXEEXT)
+ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
