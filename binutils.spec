@@ -49,7 +49,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.28
-Release: 6%{?dist}
+Release: 7%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -618,6 +618,11 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Wed Jul 19 2017 Nick Clifton  <nickc@redhat.com> 2.28-7
+- Fix s390 assembler so that it remove fake local symbols from its output.
+  (#1460254)
+  (#1472486)
+
 * Mon Jun 26 2017 Nick Clifton  <nickc@redhat.com> 2.28-6
 - Remove %license entry in binutils.spec.
 
