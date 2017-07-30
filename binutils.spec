@@ -49,7 +49,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.28
-Release: 7%{?dist}
+Release: 8%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -101,6 +101,8 @@ Patch22: binutils-2.28-aarch64-copy-relocs.patch
 Patch23: binutils-2.28-ignore-gold-duplicates.patch
 # Add extra PowerPC instructions that were omitted from the 2.28 release.
 Patch24: binutils-2.28-ppc-extra-insns.patch
+# Add support for displaying new DWARF5 tags including DW_AT_export_symbols.
+Patch25: binutils-2.28-DW_AT_export_symbols.patch
 
 Provides: bundled(libiberty)
 
@@ -258,6 +260,7 @@ using libelf instead of BFD.
 %patch22 -p1
 %patch23 -p1
 %patch24 -p1
+%patch25 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -618,6 +621,10 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Thu Jul 20 2017 Nick Clifton  <nickc@redhat.com> 2.28-8
+- Add support for displaying new DWARF5 tags.
+  (#1472955)
+
 * Wed Jul 19 2017 Nick Clifton  <nickc@redhat.com> 2.28-7
 - Fix s390 assembler so that it remove fake local symbols from its output.
   (#1460254)
