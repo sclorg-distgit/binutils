@@ -49,7 +49,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.28
-Release: 4%{?dist}
+Release: 6%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -97,8 +97,10 @@ Patch20: binutils-2.28-dynamic-section-warning.patch
 Patch21: binutils-2.28-testsuite-failure-fixes.patch
 # Fix the incorrect generation of copy relocs on AArch64.
 Patch22: binutils-2.28-aarch64-copy-relocs.patch
-# Ignore duplicate indirect symbols produced by the GOLD linker.
+# Ignore duplicate indirect symbols produced by GOLD.
 Patch23: binutils-2.28-ignore-gold-duplicates.patch
+# Add extra PowerPC instructions that were omitted from the 2.28 release.
+Patch24: binutils-2.28-ppc-extra-insns.patch
 
 Provides: bundled(libiberty)
 
@@ -255,6 +257,7 @@ using libelf instead of BFD.
 %patch21 -p1
 %patch22 -p1
 %patch23 -p1
+%patch24 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -580,6 +583,8 @@ exit 0
 
 %files -f %{?cross}binutils.lang
 %defattr(-,root,root,-)
+# Removed because this is incompatible with RHEL6...
+# %license COPYING COPYING3 COPYING3.LIB COPYING.LIB
 %doc README
 %{_bindir}/%{?cross}[!l]*
 %if "%{build_gold}" == "both"
@@ -613,6 +618,13 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Mon Jun 26 2017 Nick Clifton  <nickc@redhat.com> 2.28-6
+- Remove %license entry in binutils.spec.
+
+* Mon Jun 26 2017 Nick Clifton  <nickc@redhat.com> 2.28-5
+- Add support for LNIA instruction to PowerPC assembler.
+  (#1357021)
+
 * Thu Jun 15 2017 Nick Clifton  <nickc@redhat.com> 2.28-4
 - Update patch to fix AArch64 copy reloc generation.
   (#1452170)
