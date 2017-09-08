@@ -4,6 +4,9 @@
 # --without testsuite: Do not run the testsuite.  Default is to run it.
 # --with testsuite: Run the testsuite.  Default --with debug is not to run it.
 
+# For DTS-6 on RHEL-6 we only support x86 and x86_64.
+# For DTS-6 on RHEL-7 we also support ppc64, ppc64le, s390x and aarch64
+
 %{?scl:%{?scl_package:%scl_package binutils}}
 
 %if 0%{!?binutils_target:1}
@@ -27,7 +30,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.27
-Release: 8%{?dist}
+Release: 10%{?dist}.1
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -67,6 +70,8 @@ Patch16: binutils-2.27-local-dynsym-count.patch
 Patch17: binutils-2.27-monotonic-section-offsets.patch
 # Really enable -z relro by default for aarch64
 Patch18: binutils-2.27-aarch64-relro-default.patch
+# Revert H.J.'s patch to elide PLT entries.
+Patch19: binutils-2.27-revert-PLT-elision.patch
 
 Provides: bundled(libiberty)
 
@@ -193,10 +198,11 @@ using libelf instead of BFD.
 %patch12 -p1 -b .kernel-lto~
 %patch13 -p1 -b .provide-hash~
 %patch14 -p1 -b .manpage~
-%patch15 -p1 
-%patch16 -p1 
-%patch17 -p1 
-%patch18 -p1 
+%patch15 -p1
+%patch16 -p1
+%patch17 -p1
+%patch18 -p1
+%patch19 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -286,7 +292,9 @@ CFLAGS="$CFLAGS -O0 -ggdb2 -Wno-error -D_FORTIFY_SOURCE=0"
   --enable-gold \
 %endif
 %endif
-%if !%{isnative}
+%if %{isnative}
+  --with-sysroot=/ \
+%else
   --enable-targets=%{_host} \
   --with-sysroot=%{_prefix}/%{binutils_target}/sys-root \
   --program-prefix=%{cross} \
@@ -530,6 +538,17 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Mon May 22 2017 Nick Clifton <nickc@redhat.com> 2.27-10.1
+- Add .1 to release value for z-stream build.
+  (#1452112)
+
+* Thu May 18 2017 Nick Clifton <nickc@redhat.com> 2.27-10
+- Revert H.J.Lu's PLT elision patch.
+  (#1452112)
+
+* Thu Jan 12 2017 Nick Clifton  <nickc@redhat.com> 2.27-9
+- Version bump to allow rebuild for DTS 6.1
+
 * Thu Sep 01 2016 Nick Clifton  <nickc@redhat.com> 2.27-8
 - Properly disable the default generation of compressed debug sections.
   (#1366182)
