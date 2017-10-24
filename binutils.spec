@@ -49,7 +49,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.28
-Release: 8%{?dist}
+Release: 9%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: http://sources.redhat.com/binutils
@@ -202,7 +202,12 @@ converting addresses to file and line).
 %package devel
 Summary: BFD and opcodes static and dynamic libraries and header files
 Group: System Environment/Libraries
-Provides: binutils-static = %{version}-%{release}
+# Note, this provide:
+#   Provides: binutils-static = %{version}-%{release}
+# has been suppressed so that the DTS version does not provide
+# a version of the binutils that another package cannot use.
+# See:  https://bugzilla.redhat.com/show_bug.cgi?id=1485002
+# for more details.
 %if %{with docs}
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
@@ -621,6 +626,10 @@ exit 0
 %endif # %{isnative}
 
 %changelog
+* Thu Aug 31 2017 Nick Clifton  <nickc@redhat.com> 2.28-9
+- Remove the Provides line from the spec file.
+  (#1485002)
+
 * Thu Jul 20 2017 Nick Clifton  <nickc@redhat.com> 2.28-8
 - Add support for displaying new DWARF5 tags.
   (#1472955)
