@@ -65,7 +65,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.30
-Release: 24%{?dist}
+Release: 26%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: https://sourceware.org/binutils
@@ -302,6 +302,12 @@ Patch37: binutils-fix-testsuite-failures.patch
 # Lifetime: Fixed in 2.31.
 Patch38: binutils-PowerPC-IEEE-long-double-warnings.patch
 
+# Purpose:  Use the "unsigned long long" type for pointers on hosts where
+#           long is a 32-bit type but pointers are a 64-bit type.
+# Lifetime: Permanent.  It allows 32-bit and 64-bit development rpms
+#           to be installed on the same host.
+Patch39: binutils-2.25-set-long-long.patch
+
 #----------------------------------------------------------------------------
 
 Provides: bundled(libiberty)
@@ -370,7 +376,7 @@ Conflicts: gcc-c++ < 4.0.0
 %{!?ld_gold_priority:%global ld_gold_priority   30}
 
 %if "%{build_gold}" == "both"
-Requires(post): coreutils
+Requires(post): coreutils chkconfig
 Requires(post): %{alternatives_cmd}
 Requires(preun): %{alternatives_cmd}
 %endif
@@ -401,7 +407,12 @@ converting addresses to file and line).
 %package devel
 Summary: BFD and opcodes static and dynamic libraries and header files
 Group: System Environment/Libraries
-Provides: %{?scl_prefix}binutils-static = %{version}-%{release}
+# Note, this provide:
+#   Provides: binutils-static = % {version}-% {release}
+# has been suppressed so that the DTS version does not provide
+# a version of the binutils that another package cannot use.
+# See:  https://bugzilla.redhat.com/show_bug.cgi?id=1485002
+# for more details.
 %if %{with docs}
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
@@ -467,6 +478,7 @@ using libelf instead of BFD.
 %patch36 -p1
 %patch37 -p1
 %patch38 -p1
+%patch39 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 
@@ -888,6 +900,12 @@ exit 0
 
 #----------------------------------------------------------------------------
 %changelog
+* Tue Jul 24 2018 Nick Clifton  <nickc@redhat.com> 2.30-26
+- Restore the long-long patch as it is needed for compatibilit between the 32-bit and 64-bit devel rpms.  (#1605913)
+
+* Mon Jul 23 2018 Nick Clifton  <nickc@redhat.com> 2.30-25
+- Add a requirement on chkconfig for the alternatives command
+
 * Mon Jun 18 2018 Nick Clifton  <nickc@redhat.com> 2.30-24
 - When installing both ld.bfd and ld.gold, do not reset the current alternative if upgrading.  (#1592069)
 
