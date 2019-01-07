@@ -65,7 +65,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.30
-Release: 26%{?dist}
+Release: 47.bs1%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: https://sourceware.org/binutils
@@ -74,7 +74,7 @@ URL: https://sourceware.org/binutils
 # too many controversial patches so we stick with the official FSF version
 # instead.
 
-Source: http://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.xz
+Source: https://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.xz
 
 Source2: binutils-2.19.50.0.1-output-format.sed
 
@@ -308,11 +308,53 @@ Patch38: binutils-PowerPC-IEEE-long-double-warnings.patch
 #           to be installed on the same host.
 Patch39: binutils-2.25-set-long-long.patch
 
+# Purpose:  Fix the generation of relocations for assembler generated notes.
+# Lifetime: Fixed in 2.31.
+Patch40: binutils-missing-notes.patch
+
+# Purpose:  Fix the gold linker so that it can handle note sections with
+#           relocs that refer to discarded code sections.
+# Lifetime: Fixed in 2.32 (maybe).
+Patch41: binutils-gold-ignore-discarded-note-relocs.patch
+
+# Purpose:  Merge .gnu.build.attribute sections into a single section.
+# Lifetime: Fixed in 2.32
+Patch42: binutils-merge-attribute-sections.patch
+
+# Purpose:  Remove empty x86 property notes.
+# Lifetime: Fixed in 2.31
+Patch43: binutils-remove-empty-ISA-properties.patch
+
+# Purpose:  Improve objcopy's --merge-notes option.
+# Lifetime: Fixed in 2.32
+Patch44: binutils-note-merge-improvements.patch
+
+# Purpose:  Fix GOLDs creation of note segments.
+# Lifetime: Fixed in 2.31
+Patch45: binutils-gold-note-segment.patch
+
+# Purpose:  Stop readelf's reports of gaps in build notes - they are unreliable.
+# Lifetime: Unknown.
+Patch46: binutils-disable-readelf-gap-reports.patch
+
+# Purpose:  Stop the binutils from statically linking with libstdc++.
+# Lifetime: Permanent.
+Patch48: binutils-do-not-link-with-static-libstdc++.patch
+
+# Purpose:  Add a .attach_to_group pseudo-op to the assembler for
+#           use by the annobin gcc plugin.
+# Lifetime: Permanent.
+Patch49: binutils-attach-to-group.patch
+
+# Purpose:  Fix a potential buffer overrun when parsing a corrupt ELF file.
+# Lifetime: Fixed in 2.32.
+Patch50: binutils-CVE-2018-17358.patch
+
 #----------------------------------------------------------------------------
 
 Provides: bundled(libiberty)
 
-%define gold_arches %ix86 x86_64 %arm aarch64 %{power64} s390x
+%define gold_arches %{ix86} x86_64 %{arm} aarch64 %{power64} s390x
 
 %if %{with bootstrap}
 %define build_gold      no
@@ -482,8 +524,19 @@ using libelf instead of BFD.
 %patch37 -p1
 %patch38 -p1
 %patch39 -p1
+%patch40 -p1
+%patch41 -p1
+%patch42 -p1
+%patch43 -p1
+%patch44 -p1
+%patch45 -p1
+%patch46 -p1
+%patch48 -p1
+%patch49 -p1
+%patch50 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
+# FIXME - this is no longer true.  Maybe try reinstating autotool use ?
 
 # On ppc64 and aarch64, we might use 64KiB pages
 sed -i -e '/#define.*ELF_COMMONPAGESIZE/s/0x1000$/0x10000/' bfd/elf*ppc.c
@@ -630,7 +683,7 @@ export LDFLAGS=$RPM_LD_FLAGS
 %make_build %{_smp_mflags} tooldir=%{_prefix} MAKEINFO=true all
 %endif
 
-# Do not use %%check as it is run after %%install where libbfd.so is rebuild
+# Do not use %%check as it is run after %%install where libbfd.so is rebuilt
 # with -fvisibility=hidden no longer being usable in its shared form.
 %if %{without testsuite}
 echo ====================TESTSUITE DISABLED=========================
@@ -638,14 +691,29 @@ echo ====================TESTSUITE DISABLED=========================
 make -k check < /dev/null || :
 echo ====================TESTING=========================
 cat {gas/testsuite/gas,ld/ld,binutils/binutils}.sum
+%if "%{build_gold}" == "both"
+if [ -f gold/test-suite.log ]; then
+    cat gold/test-suite.log
+fi
+if [ -f gold/testsuite/test-suite.log ]; then
+    cat gold/testsuite/*.log
+fi
+%endif
 echo ====================TESTING END=====================
 for file in {gas/testsuite/gas,ld/ld,binutils/binutils}.{sum,log}
 do
   ln $file binutils-%{_target_platform}-$(basename $file) || :
 done
-tar cjf binutils-%{_target_platform}.tar.bz2 binutils-%{_target_platform}-*.{sum,log}
-uuencode binutils-%{_target_platform}.tar.bz2 binutils-%{_target_platform}.tar.bz2
-rm -f binutils-%{_target_platform}.tar.bz2 binutils-%{_target_platform}-*.{sum,log}
+tar cjf binutils-%{_target_platform}.tar.xz  binutils-%{_target_platform}-*.{sum,log}
+uuencode binutils-%{_target_platform}.tar.xz binutils-%{_target_platform}.tar.xz
+rm -f binutils-%{_target_platform}.tar.xz    binutils-%{_target_platform}-*.{sum,log}
+%if "%{build_gold}" == "both"
+if [-f gold/testsuite/test-suite.log ]; then
+  tar cjf  binutils-%{_target_platform}-gold.log.tar.xz gold/testsuite/*.log
+  uuencode binutils-%{_target_platform}-gold.log.tar.xz binutils-%{_target_platform}-gold.log.tar.xz
+  rm -f    binutils-%{_target_platform}-gold.log.tar.xz
+fi
+%endif
 %endif
 
 #----------------------------------------------------------------------------
@@ -695,7 +763,7 @@ chmod +x %{buildroot}%{_libdir}/lib*.so*
 %endif
 
 # Prevent programs from linking against libbfd and libopcodes
-# dynamically, as they are change far too often.
+# dynamically, as they are changed far too often.
 rm -f %{buildroot}%{_libdir}/lib{bfd,opcodes}.so
 
 # Remove libtool files, which reference the .so libs
@@ -902,6 +970,26 @@ exit 0
 
 #----------------------------------------------------------------------------
 %changelog
+* Fri Sep 28 2018 Nick Clifton  <nickc@redhat.com> - 2.30-47
+- Fix a potential buffer overrun when parsing a corrupt ELF file.  (#1632912)
+- Add a .attach_to_group pseuo-op to assembler (for use by annobin).  (#1630574)
+- Stop the binutils from statically linking with libstdc++.  (#1630550)
+- Include gold testsuite results in test logs.
+- Update x86_64 linker testsuite after previous delta.  (#1624779)
+- Disable the x86_64 linker's elimination of PLT entries.  (#1624779)
+- Disable readelf's reporting of gaps in build notes.  (#1623556)
+- Fix some more PowerPC64 linker testsuite failures.  (#1584565)
+- Remove PLT eliision patch.  (#1618748)
+- Restore the binutils-2.25-set-long-long.patch.
+- Fix GOLDs creation of PT_NOTE segments.  (#1614908)  (#1614920)
+- Improve objcopy's --merge-notes option.  (#1608390)
+- Remove x86 ISA property notes with empty bits.  (#1609801)
+- Rebuild with fixed binutils
+- Move the .gnu.build.attributes section to after the .comment section.
+- Merge .gnu.build.attribute sections together.  (#1608390)
+- Fix the gold linker so that it can handle relocs in discardeable note sections.  (#1607054)
+- Fix the generation of relocations for assembler created notes.  (#1598551)
+
 * Tue Jul 24 2018 Nick Clifton  <nickc@redhat.com> 2.30-26
 - Restore the long-long patch as it is needed for compatibilit between the 32-bit and 64-bit devel rpms.  (#1605913)
 
