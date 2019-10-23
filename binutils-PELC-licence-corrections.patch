@@ -1,0 +1,11 @@
+--- binutils.orig/gold/ftruncate.c	2019-06-25 11:36:51.074941484 +0100
++++ binutils-2.32/gold/ftruncate.c	2019-06-25 11:37:28.108690037 +0100
+@@ -1,7 +1,6 @@
+ /* ftruncate emulations that work on some System V's.
+-   This file is in the public domain.  */
+ 
+-/* Copyright (C) 2012-2019 Free Software Foundation, Inc.
++   Copyright (C) 2012-2019 Free Software Foundation, Inc.
+ 
+    This file is part of gold.
+ 
