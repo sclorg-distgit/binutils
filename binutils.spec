@@ -4,7 +4,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.32
-Release: 11%{?dist}
+Release: 13%{?dist}
 License: GPLv3+
 URL: https://sourceware.org/binutils
 
@@ -263,6 +263,10 @@ Patch29: binutils-ignore-duplicate-FDE-entries.patch
 # Lifetime: Fixed in 2.33
 Patch30: binutils-gas-build-note-relocs.patch
 
+# Purpose:  Support the generation of variant ABI functions in AArch64 binaries.
+# Lifetime: Fixed in 2.33
+Patch31: binutils-aarch64-STO_AARCH64_VARIANT_PCS.patch
+
 #----------------------------------------------------------------------------
 
 Provides: bundled(libiberty)
@@ -428,6 +432,7 @@ using libelf instead of BFD.
 %patch28 -p1
 %patch29 -p1
 %patch30 -p1
+%patch31 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 # FIXME - this is no longer true.  Maybe try reinstating autotool use ?
@@ -872,6 +877,12 @@ exit 0
 
 #----------------------------------------------------------------------------
 %changelog
+* Fri Jul 05 2019 Nick Clifton  <nickc@redhat.com> - 2.32-13
+- Define scl before Name.
+
+* Tue Jul 02 2019 Nick Clifton  <nickc@redhat.com> - 2.32-12
+- Add support for AArch64 function calls that use a variant PCS.
+
 * Mon Jul 01 2019 Nick Clifton  <nickc@redhat.com> - 2.32-11
 - Stop gas from triggering a seg-fault when creating relocs for build notes.  (PR 24748)
 
