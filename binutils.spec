@@ -71,7 +71,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.32
-Release: 7%{?dist}
+Release: 9%{?dist}
 License: GPLv3+
 Group: Development/Tools
 URL: https://sourceware.org/binutils
@@ -243,6 +243,17 @@ Patch25: binutils-s390x-arch13-descriptions.patch
 # Lifetime: 2.33 (probably)
 Patch26: binutils-gold-mismatched-section-flags.patch
 
+# Purpose:  Remove the builder id comment from bfd-stdint.h.  It causes
+#            conflicts when both the i686 and x86_64 binutils devel rpms
+#            are installed, as the comments makes the file compare as
+#            being different.
+# Lifetime: Permanent.
+Patch27: binutils-no-builder-comment-in-bfd-stdint.patch
+
+# Purpose:  Correct licence strings rejected by PELC review.
+# Lifetime: Permanent.
+Patch28: binutils-PELC-licence-corrections.patch
+
 #----------------------------------------------------------------------------
 
 Provides: bundled(libiberty)
@@ -401,6 +412,8 @@ using libelf instead of BFD.
 %patch24 -p1
 %patch25 -p1
 %patch26 -p1
+%patch27 -p1
+%patch28 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 # FIXME - this is no longer true.  Maybe try reinstating autotool use ?
@@ -846,6 +859,12 @@ exit 0
 
 #----------------------------------------------------------------------------
 %changelog
+* Tue Jun 25 2019 Nick Clifton  <nickc@redhat.com> - 2.32-9
+- Correct licences rejected by PELC review.
+
+* Mon Jun 24 2019 Nick Clifton  <nickc@redhat.com> - 2.32-8
+- Remove the builder command from bfd-stdint.h.
+
 * Mon Jun 24 2019 Nick Clifton  <nickc@redhat.com> - 2.32-7
 - Stop gold from aborting when it encounters input sections with the same name and different flags.  (#1722715)
 
