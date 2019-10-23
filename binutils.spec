@@ -1,3 +1,13 @@
+
+%{?scl:%{?scl_package:%scl_package binutils}}
+
+Summary: A GNU collection of binary utilities
+Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
+Version: 2.32
+Release: 11%{?dist}
+License: GPLv3+
+URL: https://sourceware.org/binutils
+
 # Binutils SPEC file.  Can be invoked with the following parameters:
 
 # --define "binutils_target arm-linux-gnu" to create arm-linux-gnu-binutils.
@@ -36,8 +46,6 @@
 
 #----End of Configure Options------------------------------------------------
 
-%{?scl:%{?scl_package:%scl_package binutils}}
-
 # Default: Not bootstrapping.
 %bcond_with bootstrap
 # Default: Not debug
@@ -67,14 +75,6 @@
 %endif
 
 #----------------------------------------------------------------------------
-
-Summary: A GNU collection of binary utilities
-Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
-Version: 2.32
-Release: 9%{?dist}
-License: GPLv3+
-Group: Development/Tools
-URL: https://sourceware.org/binutils
 
 # Note - the Linux Kernel binutils releases are too unstable and contain
 # too many controversial patches so we stick with the official FSF version
@@ -254,6 +254,15 @@ Patch27: binutils-no-builder-comment-in-bfd-stdint.patch
 # Lifetime: Permanent.
 Patch28: binutils-PELC-licence-corrections.patch
 
+# Purpose:  Ignore duplicate FDE entries found in some AArch64 libraries.
+# Lifetime: Permanent.
+Patch29: binutils-ignore-duplicate-FDE-entries.patch
+
+# Purpose:  Corrcect a memory corruption when generating relocs for build
+#            notes in the assembler.
+# Lifetime: Fixed in 2.33
+Patch30: binutils-gas-build-note-relocs.patch
+
 #----------------------------------------------------------------------------
 
 Provides: bundled(libiberty)
@@ -417,6 +426,8 @@ using libelf instead of BFD.
 %patch26 -p1
 %patch27 -p1
 %patch28 -p1
+%patch29 -p1
+%patch30 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 # FIXME - this is no longer true.  Maybe try reinstating autotool use ?
@@ -861,6 +872,12 @@ exit 0
 
 #----------------------------------------------------------------------------
 %changelog
+* Mon Jul 01 2019 Nick Clifton  <nickc@redhat.com> - 2.32-11
+- Stop gas from triggering a seg-fault when creating relocs for build notes.  (PR 24748)
+
+* Tue Jun 25 2019 Nick Clifton  <nickc@redhat.com> - 2.32-10
+- Ignore duplicate FDE entries in AArch64 libraries.  (#1709827)
+
 * Tue Jun 25 2019 Nick Clifton  <nickc@redhat.com> - 2.32-9
 - Correct licences rejected by PELC review.
 

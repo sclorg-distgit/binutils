@@ -1,0 +1,24 @@
+--- binutils-2.32.orig/bfd/elf-eh-frame.c	2019-06-26 07:05:43.839194746 -0400
++++ binutils-2.32/bfd/elf-eh-frame.c	2019-06-26 07:32:37.124219479 -0400
+@@ -2478,11 +2478,16 @@ write_dwarf_eh_frame_hdr (bfd *abfd, str
+ 		  != sec->output_section->vma + val))
+ 	    overflow = TRUE;
+ 	  bfd_put_32 (abfd, val, contents + EH_FRAME_HDR_SIZE + i * 8 + 8);
+-	  if (i != 0
+-	      && (hdr_info->u.dwarf.array[i].initial_loc
+-		  < (hdr_info->u.dwarf.array[i - 1].initial_loc
+-		     + hdr_info->u.dwarf.array[i - 1].range)))
+-	    overlap = TRUE;
++	  if (i != 0)
++	    {
++	      struct eh_frame_array_ent * this_entry = hdr_info->u.dwarf.array + i;
++	      struct eh_frame_array_ent * prev_entry = hdr_info->u.dwarf.array + (i - 1);
++
++	      if (this_entry->initial_loc < prev_entry->initial_loc + prev_entry->range
++		  && (this_entry->initial_loc != prev_entry->initial_loc
++		      || this_entry->range != prev_entry->range))
++		overlap = TRUE;
++	    }
+ 	}
+       if (overflow)
+ 	_bfd_error_handler (_(".eh_frame_hdr entry overflow"));
