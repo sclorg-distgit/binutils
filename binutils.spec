@@ -4,7 +4,7 @@
 Summary: A GNU collection of binary utilities
 Name: %{?scl_prefix}%{?cross}binutils%{?_with_debug:-debug}
 Version: 2.32
-Release: 13%{?dist}
+Release: 14%{?dist}
 License: GPLv3+
 URL: https://sourceware.org/binutils
 
@@ -267,6 +267,14 @@ Patch30: binutils-gas-build-note-relocs.patch
 # Lifetime: Fixed in 2.33
 Patch31: binutils-aarch64-STO_AARCH64_VARIANT_PCS.patch
 
+# Purpose: Add check to libiberty library in order to prevent an integer overflow in the gold linker.
+# Lifetime: Fixed in 2.33
+Patch32: binutils-CVE-2019-14250.patch
+
+# Purpose: Add check to readelf in order to prevent an integer overflow.
+# Lifetime: Fixed in 2.33
+Patch33: binutils-CVE-2019-14444.patch
+
 #----------------------------------------------------------------------------
 
 Provides: bundled(libiberty)
@@ -433,6 +441,8 @@ using libelf instead of BFD.
 %patch29 -p1
 %patch30 -p1
 %patch31 -p1
+%patch32 -p1
+%patch33 -p1
 
 # We cannot run autotools as there is an exact requirement of autoconf-2.59.
 # FIXME - this is no longer true.  Maybe try reinstating autotool use ?
@@ -877,6 +887,10 @@ exit 0
 
 #----------------------------------------------------------------------------
 %changelog
+* Wed Aug 21 2019 Nick Clifton  <nickc@redhat.com> - 2.32-14
+- Fix potential integer overflow in readelf.  (#1740470)
+- Fix potential integer overflow in GOLD.  (#1739491)
+
 * Fri Jul 05 2019 Nick Clifton  <nickc@redhat.com> - 2.32-13
 - Define scl before Name.
 
